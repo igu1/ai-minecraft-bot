@@ -1,0 +1,160 @@
+{
+    "name": "TreeBot",
+    "description": "A versatile Minecraft bot that can help with various tasks, especially tree harvesting and wood collection",
+    "capabilities": {
+        "findTrees": {
+            "name": "findTrees",
+            "description": "Search for and cut down nearby trees",
+            "command": "find trees",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "treeType": {
+                        "type": "string",
+                        "enum": ["oak", "birch", "spruce", "any"],
+                        "default": "any",
+                        "description": "Type of tree to find"
+                    },
+                    "maxCount": {
+                        "type": "number",
+                        "default": 5,
+                        "description": "Maximum number of trees to harvest"
+                    }
+                }
+            },
+            "examples": [
+                "Can you find some oak trees?",
+                "Cut down 3 birch trees",
+                "I need wood, please cut some trees",
+                "Look for spruce trees nearby"
+            ]
+        },
+        "giveWood": {
+            "name": "giveWood",
+            "description": "Give collected wood to the requesting player",
+            "command": "give wood",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "amount": {
+                        "type": "number",
+                        "default": "all",
+                        "description": "Amount of wood to give"
+                    },
+                    "woodType": {
+                        "type": "string",
+                        "enum": ["oak", "birch", "spruce", "any"],
+                        "default": "any",
+                        "description": "Type of wood to give"
+                    }
+                }
+            },
+            "examples": [
+                "Can I have 10 oak logs?",
+                "Give me all your wood",
+                "Share your birch wood with me",
+                "I need some spruce logs"
+            ]
+        },
+        "followPlayer": {
+            "name": "followPlayer",
+            "description": "Follow a specific player around",
+            "command": "follow me",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "playerName": {
+                        "type": "string",
+                        "description": "Name of the player to follow"
+                    },
+                    "distance": {
+                        "type": "number",
+                        "default": 2,
+                        "description": "Distance to maintain from player"
+                    }
+                }
+            },
+            "examples": [
+                "Follow me",
+                "Stay close to me",
+                "Follow me while I explore",
+                "Keep following me at distance 3"
+            ]
+        },
+        "stopAction": {
+            "name": "stopAction",
+            "description": "Stop the current action",
+            "command": "stop",
+            "parameters": {},
+            "examples": [
+                "Stop what you're doing",
+                "Cancel the current task",
+                "That's enough",
+                "Stop following me"
+            ]
+        },
+        "checkInventory": {
+            "name": "checkInventory",
+            "description": "Check what items the bot has in its inventory",
+            "command": "check inventory",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "itemType": {
+                        "type": "string",
+                        "default": "all",
+                        "description": "Type of item to check for"
+                    }
+                }
+            },
+            "examples": [
+                "What's in your inventory?",
+                "How much wood do you have?",
+                "Show me your items",
+                "Check what you're carrying"
+            ]
+        }
+    },
+    "responses": {
+        "greetings": [
+            "Hello! I'm here to help with various tasks!",
+            "Hi! What can I help you with today?",
+            "Greetings! I'm ready to assist you!"
+        ],
+        "noTrees": [
+            "I couldn't find any {treeType} trees nearby.",
+            "There don't seem to be any {treeType} trees in this area.",
+            "No {treeType} trees in range, should we look somewhere else?"
+        ],
+        "startingHarvest": [
+            "I'll start looking for {treeType} trees!",
+            "On my way to harvest some {treeType} trees!",
+            "Let me find and cut some {treeType} trees for you!"
+        ],
+        "givingWood": [
+            "Here's your {woodType} wood!",
+            "I've got some {woodType} wood for you!",
+            "Let me share this {woodType} wood with you!"
+        ],
+        "following": [
+            "I'll follow you, {playerName}!",
+            "Leading the way, {playerName}? I'm right behind you!",
+            "Following you at distance {distance}!"
+        ],
+        "stopping": [
+            "Stopping current task.",
+            "Alright, I'll stop.",
+            "Task cancelled."
+        ],
+        "inventory": [
+            "Here's what I have: {items}",
+            "In my inventory: {items}",
+            "I'm carrying: {items}"
+        ],
+        "error": [
+            "I'm having trouble with that right now.",
+            "Sorry, I couldn't complete that task.",
+            "Something went wrong, please try again."
+        ]
+    }
+}
