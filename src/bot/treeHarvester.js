@@ -1,16 +1,19 @@
 const { goals } = require('mineflayer-pathfinder');
 const { GoalNear } = goals;
-const { TREE_BLOCKS, DEFAULT_SETTINGS } = require('../config/constants');
+const { EventEmitter } = require('events');
+const { TREE_BLOCKS, DEFAULT_SETTINGS, EVENTS } = require('../config/constants');
 
 /**
  * Tree harvesting functionality for TreeBot
+ * @extends EventEmitter
  */
-class TreeHarvester {
+class TreeHarvester extends EventEmitter {
     /**
      * Initialize tree harvester
      * @param {Object} bot - Mineflayer bot instance
      */
     constructor(bot) {
+        super();
         this.bot = bot;
         this.isHarvesting = false;
     }
@@ -27,6 +30,7 @@ class TreeHarvester {
         }
 
         this.isHarvesting = true;
+        this.emit(EVENTS.HARVEST_START, params);
         this.bot.chat("Starting tree harvest...");
         
         try {
@@ -41,6 +45,12 @@ class TreeHarvester {
                     break;
                 }
 
+                // Emit tree found event
+                this.emit(EVENTS.TREE_FOUND, {
+                    position: tree.position,
+                    type: tree.name
+                });
+
                 const success = await this.harvestTree(tree);
                 if (success) {
                     harvestedCount++;
@@ -49,11 +59,21 @@ class TreeHarvester {
             }
             
             this.isHarvesting = false;
-            this.bot.chat("Finished harvesting trees!");
-        } catch (err) {
-            console.error('Error during tree harvest:', err);
-            this.bot.chat("Error during tree harvest!");
+            this.emit(EVENTS.HARVEST_COMPLETE, { 
+                harvestedCount,
+                treeType,
+                success: true
+            });
+            this.bot.chat("Tree harvesting complete!");
+            
+        } catch (error) {
+            console.error('Error during tree harvesting:', error);
+            this.bot.chat("Something went wrong while harvesting trees.");
             this.isHarvesting = false;
+            this.emit(EVENTS.HARVEST_COMPLETE, { 
+                error: error.message,
+                success: false
+            });
         }
     }
 
@@ -119,7 +139,6 @@ class TreeHarvester {
                 await this.bot.dig(currentBlock);
                 await new Promise(resolve => setTimeout(resolve, 500));
             
-                // Collect dropped items
                 const droppedLogs = Object.values(this.bot.entities).filter(entity => 
                     entity.type === 'object' && 
                     TREE_BLOCKS.some(treeName => entity.name.includes(treeName)) &&
@@ -153,7 +172,10 @@ class TreeHarvester {
      * Stop harvesting
      */
     stop() {
-        this.isHarvesting = false;
+        if (this.isHarvesting) {
+            this.isHarvesting = false;
+            this.bot.chat("Stopping tree harvest.");
+        }
     }
 }
 

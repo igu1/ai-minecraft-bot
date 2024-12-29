@@ -1,7 +1,14 @@
+const { EventEmitter } = require('events');
+const { EVENTS } = require('../config/constants');
+
 /**
  * Parse and process AI responses
  */
-class ResponseParser {
+class ResponseParser extends EventEmitter {
+    constructor() {
+        super();
+    }
+
     /**
      * Parse a function call from AI response
      * @param {string} response - AI response text
@@ -18,7 +25,6 @@ class ResponseParser {
             try {
                 parameters = paramsStr ? JSON.parse(paramsStr) : {};
                 
-                // Convert numeric parameters
                 if (parameters.distance) {
                     parameters.distance = Number(parameters.distance);
                 }

@@ -1,16 +1,18 @@
 const mineflayer = require('mineflayer');
 const { pathfinder, Movements } = require('mineflayer-pathfinder');
-const BotAI = require('../ai/BotAI');
-const Movement = require('./movement');
+const { EventEmitter } = require('events');
+const { EVENTS } = require('../config/constants');
 const Inventory = require('./inventory');
 const TreeHarvester = require('./treeHarvester');
+const BotAI = require('../ai/BotAI');
+const Movement = require('./movement');
 const { DEFAULT_SETTINGS, COMMANDS } = require('../config/constants');
 require('dotenv').config();
 
 /**
  * Main TreeBot class that coordinates all bot functionality
  */
-class TreeBot {
+class TreeBot extends EventEmitter {
     /**
      * Initialize the TreeBot
      * @param {string} host - Server host
@@ -18,6 +20,7 @@ class TreeBot {
      * @param {string} username - Bot username
      */
     constructor(host = DEFAULT_SETTINGS.HOST, port = DEFAULT_SETTINGS.PORT, username = DEFAULT_SETTINGS.USERNAME) {
+        super();
         this.host = host;
         this.port = port;
         this.username = username;
@@ -58,6 +61,58 @@ class TreeBot {
         this.bot.once('spawn', this.handleSpawn.bind(this));
         this.bot.on('chat', this.handleChat.bind(this));
         this.bot.on('physicsTick', this.handlePhysicsTick.bind(this));
+
+        this.bot.once('spawn', () => {
+            this.emit(EVENTS.BOT_CONNECTED);
+            this.bot.chat('TreeBot connected and ready to help!');
+        });
+
+        this.bot.on('chat', async (username, message) => {
+            if (username === this.bot.username) return;
+            
+            this.emit(EVENTS.COMMAND_RECEIVED, {
+                username,
+                message
+            });
+
+            try {
+                const context = {
+                    playerName: username,
+                    inventory: this.inventory.getInventoryStatus(),
+                    isHarvesting: this.harvester.isHarvesting
+                };
+
+                const response = await this.ai.processMessage(message, context);
+                await this.executeCommand(response, username);
+                
+                this.emit(EVENTS.COMMAND_EXECUTED, {
+                    username,
+                    message,
+                    response,
+                    success: true
+                });
+                
+            } catch (error) {
+                console.error('Error processing command:', error);
+                this.bot.chat("I couldn't process that command.");
+                
+                this.emit(EVENTS.BOT_ERROR, {
+                    error: error.message,
+                    command: message
+                });
+            }
+        });
+
+        this.bot.on('error', (error) => {
+            console.error('Bot error:', error);
+            this.emit(EVENTS.BOT_ERROR, {
+                error: error.message
+            });
+        });
+
+        this.bot.on('end', () => {
+            this.emit(EVENTS.BOT_DISCONNECTED);
+        });
     }
 
     /**
@@ -103,11 +158,21 @@ class TreeBot {
         const botMentioned = message.toLowerCase().includes("@" + this.bot.username.toLowerCase());
         if (!botMentioned) return;
 
-        const aiResponse = await this.ai.processMessage(message, { playerName: username });
-        console.log('AI Response:', aiResponse);
+        const aiResponse = await this.ai.processMessage(message, { playerName: username, bot: {
+            name: this.bot.username,
+            position: {
+                x: this.bot.entity.position.x,
+                y: this.bot.entity.position.y,
+                z: this.bot.entity.position.z
+            },
+            health: this.bot.health,
+            inventory: this.bot.inventory
+        } });
 
         if (aiResponse.type === 'command') {
+            this.stopAllActions();
             await this.executeCommand(aiResponse, username);
+            return;
         }
         
         this.bot.chat(aiResponse.response);

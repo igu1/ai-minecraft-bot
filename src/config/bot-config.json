@@ -1,6 +1,6 @@
 {
     "name": "TreeBot",
-    "description": "A versatile Minecraft bot that can help with various tasks, especially tree harvesting and wood collection",
+    "description": "A versatile Minecraft bot that can help with various tasks.",
     "capabilities": {
         "findTrees": {
             "name": "findTrees",

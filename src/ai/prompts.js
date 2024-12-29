@@ -22,6 +22,10 @@ class Prompts {
 
                 Current context:
                 - Player speaking: ${context.playerName || 'unknown'}
+                - Bot name: ${context.bot.name}
+                - Bot position: ${Math.round(context.bot.position.x)}, ${Math.round(context.bot.position.y)}, ${Math.round(context.bot.position.z)}
+                - Bot health: ${Math.round(context.bot.health)}
+
 
                 User message: "${message}"
 
@@ -29,6 +33,7 @@ class Prompts {
                 Otherwise, respond naturally without any function calls.
 
                 Remember:
+                0. IMPORTANT: USE YOU CONTEXT TO RESPOND
                 1. Include the complete function call with parameters if applicable
                 2. Keep responses short and friendly
                 3. Stay in character as a helpful Minecraft bot
