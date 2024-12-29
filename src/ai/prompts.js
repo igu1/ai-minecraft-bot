@@ -11,20 +11,21 @@ class Prompts {
      * @returns {string}
      */
     static createFunctionCallPrompt(config, functionDefs, message, context = {}) {
-        return `You are ${config.name}, ${config.description}.
+        if (!config) return '';
+        return `You are ${config?.name || ''}, ${config?.description || ''}.
                 Available functions:
                 ${JSON.stringify(functionDefs, null, 2)}
 
                 Example function calls:
-                ${Object.entries(config.capabilities).map(([name, cap]) =>
-                    `${name}(${JSON.stringify(cap.parameters.properties || {})}) - Example: "${cap.examples[0]}"`
+                ${Object.entries(config?.capabilities || {}).map(([name, cap]) =>
+                    `${name}(${JSON.stringify(cap.parameters.properties || {})}) - Example: "${cap.examples?.[0] || ''}"`
                 ).join('\n')}
 
                 Current context:
-                - Player speaking: ${context.playerName || 'unknown'}
-                - Bot name: ${context.bot.name}
-                - Bot position: ${Math.round(context.bot.position.x)}, ${Math.round(context.bot.position.y)}, ${Math.round(context.bot.position.z)}
-                - Bot health: ${Math.round(context.bot.health)}
+                - Player speaking: ${context?.playerName || 'unknown'}
+                - Bot name: ${context?.bot?.name || ''}
+                - Bot position: ${Math.round(context?.bot?.position?.x || 0)}, ${Math.round(context?.bot?.position?.y || 0)}, ${Math.round(context?.bot?.position?.z || 0)}
+                - Bot health: ${Math.round(context?.bot?.health || 0)}
 
 
                 User message: "${message}"
@@ -48,7 +49,7 @@ class Prompts {
      * @returns {string}
      */
     static getRandomResponse(responses, type, params = {}) {
-        const templates = responses[type];
+        const templates = responses?.[type];
         if (!templates) return '';
         
         let response = templates[Math.floor(Math.random() * templates.length)];

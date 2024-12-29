@@ -2,9 +2,9 @@
   "name": "minecraft-treebot",
   "version": "1.0.0",
   "description": "A smart Minecraft bot that can find, harvest, and collect trees using natural language commands",
-  "main": "src/bot/TreeBot.js",
+  "main": "src/bot/Bot.js",
   "scripts": {
-    "start": "node src/bot/TreeBot.js",
+    "start": "node src/bot/Bot.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

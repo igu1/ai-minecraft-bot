@@ -15,13 +15,19 @@ class Inventory extends EventEmitter {
     constructor(bot) {
         super();
         this.bot = bot;
-        this.setupInventoryEvents();
+        this.bot.on('spawn', this.setupInventoryEvents.bind(this));
     }
 
     /**
      * Set up inventory event listeners
      */
     setupInventoryEvents() {
+
+        if (!this.bot.inventory) {
+            console.log('Inventory not found! Is this a server issue?');
+            return;
+        }
+
         this.bot.inventory.on('updateSlot', () => {
             const status = this.getInventoryStatus();
             this.emit(EVENTS.INVENTORY_UPDATED, status);

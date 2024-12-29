@@ -166,7 +166,6 @@ class TreeBot extends EventEmitter {
                 z: this.bot.entity.position.z
             },
             health: this.bot.health,
-            inventory: this.bot.inventory
         } });
 
         if (aiResponse.type === 'command') {

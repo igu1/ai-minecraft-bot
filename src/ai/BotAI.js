@@ -44,7 +44,6 @@ class BotAI extends EventEmitter {
     async processMessage(message, context = {}) {
         try {
             this.emit('aiProcessingStart', { message, context });
-            console.log(context)
             const prompt = Prompts.createFunctionCallPrompt(
                 this.config,
                 this.functionDefs,
