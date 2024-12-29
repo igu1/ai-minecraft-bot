@@ -17,21 +17,23 @@ class ResponseParser extends EventEmitter {
     static parseFunctionCall(response) {
         const functionCallRegex = /(\w+)\((.*?)\)/;
         const match = response.match(functionCallRegex);
-
         if (match) {
             const [_, name, paramsStr] = match;
             let parameters = {};
-            
+
             try {
                 parameters = paramsStr ? JSON.parse(paramsStr) : {};
-                
+
                 if (parameters.distance) {
                     parameters.distance = Number(parameters.distance);
                 }
                 if (parameters.maxCount) {
                     parameters.maxCount = Number(parameters.maxCount);
                 }
-                
+                if (parameters.target) {
+                    parameters.target = parameters.target == 'null' ? null : parameters.target;
+                }
+
             } catch (e) {
                 console.warn('Could not parse parameters:', paramsStr);
             }
@@ -55,6 +57,12 @@ class ResponseParser extends EventEmitter {
             treeType: params.treeType || 'any',
             woodType: params.woodType || 'any',
             playerName: params.playerName || 'player',
+            target: params.target || {
+                entityType: params.entityType || 'any',
+                entityNames: params.entityNames || [],
+                count: params.count ? Number(params.count) : 1,
+            },
+            tool: params.tool || 'sword',
             distance: params.distance ? Number(params.distance) : 2,
             items: params.items || 'nothing'
         };
@@ -71,7 +79,8 @@ class ResponseParser extends EventEmitter {
             giveWood: 'givingWood',
             followPlayer: 'following',
             stopAction: 'stopping',
-            checkInventory: 'inventory'
+            checkInventory: 'inventory',
+            engage: 'engaging'
         };
         return responseTypes[functionName] || 'greetings';
     }

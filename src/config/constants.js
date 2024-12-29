@@ -17,6 +17,7 @@ module.exports = {
         PORT: 25565,
         USERNAME: 'AI',
         VERSION: '1.20.4',
+        MODEL: 'llama-3.1-8b-instant',
         FOLLOW_DISTANCE: 2,
         MAX_TREES: 5,
         SEARCH_RADIUS: 32,
@@ -29,8 +30,71 @@ module.exports = {
         GIVE_WOOD: 'give wood',
         FOLLOW_ME: 'follow me',
         STOP: 'stop',
-        CHECK_INVENTORY: 'check inventory'
+        CHECK_INVENTORY: 'check inventory',
+        ENGAGE: 'engage'
     },
+
+    // Tools
+    TOOLS: {
+        SWORD: 'sword',
+        PICKAXE: 'pickaxe',
+        AXE: 'axe',
+        SHOVEL: 'shovel',
+        BOW: 'bow'
+    },
+
+    // Animal types
+    FOOD_ANIMALS: [
+        'cow',
+        'chicken',
+        'pig',
+        'sheep',
+        'rabbit',
+        'horse',
+        'donkey',
+        'mule',
+        'llama',
+        'parrot',
+        'tropical_fish',
+        'cod',
+        'salmon',
+        'squid',
+        'pufferfish'
+    ],
+
+    // Mobs
+    HOSTILE_MOBS: [
+        'cave_spider',
+        'elder_guardian',
+        'enderman',
+        'giant',
+        'guardian',
+        'husk',
+        'magma_cube',
+        'silverfish',
+        'skeleton',
+        'slime',
+        'spider',
+        'zombie',
+        'zombie_pigman',
+        'zombie_villager'
+    ],
+
+    // MOBS TO RUN AWAY FROM
+    DANGER_MOBS: [
+        'endermite',
+        'ghoul',
+        'creeper',
+        'ghast',
+        'witch',
+        'ender_dragon',
+        'blaze',
+        'skeleton_horse',
+        'wither_skeleton',
+        'wither',
+        'zombie_horse',
+        'zombie_villager'
+    ],
 
     // Event types
     EVENTS: {

@@ -18,16 +18,11 @@ class Inventory extends EventEmitter {
         this.bot.on('spawn', this.setupInventoryEvents.bind(this));
     }
 
-    /**
-     * Set up inventory event listeners
-     */
     setupInventoryEvents() {
-
         if (!this.bot.inventory) {
             console.log('Inventory not found! Is this a server issue?');
             return;
         }
-
         this.bot.inventory.on('updateSlot', () => {
             const status = this.getInventoryStatus();
             this.emit(EVENTS.INVENTORY_UPDATED, status);
@@ -53,6 +48,63 @@ class Inventory extends EventEmitter {
             }))
         };
     }
+
+
+    setSword() {
+        const sword = this.bot.heldItem;
+        if (sword && sword.name.includes('sword')) {
+            return;
+        }
+        const swordInInventory = this.bot.inventory.items().find(item => item.name.includes('sword'));
+        if (swordInInventory) {
+            this.bot.equip(swordInInventory, 'hand');
+        }else {
+            this.bot.chat("I don't have a sword!, it will be nice to have one! For now I'll just use my hands! its ok");
+        }
+    }
+
+    setPickaxe() {
+        const pickaxe = this.bot.heldItem;
+        if (pickaxe && pickaxe.name.includes('pickaxe')) {
+            return;
+        }
+        const pickaxeInInventory = this.bot.inventory.items().find(item => item.name.includes('pickaxe'));
+        if (pickaxeInInventory) {
+            this.bot.equip(pickaxeInInventory, 'hand');
+        }else {
+            this.bot.chat("I don't have a pickaxe!, it will be nice to have one! For now I'll just use my hands!");
+        }
+    }
+
+    setAxe() {
+        const axe = this.bot.heldItem;
+        if (axe && axe.name.includes('axe')) {
+            return;
+        }
+        const axeInInventory = this.bot.inventory.items().find(item => {
+            console.log(item);
+            return item.name.includes('axe');
+        });
+        if (axeInInventory) {
+            this.bot.equip(axeInInventory, 'hand');
+        }else {
+            this.bot.chat("I don't have an axe!, it will be nice to have one! For now I'll just use my hands!");
+        }
+    }
+
+    setShovel() {
+        const shovel = this.bot.heldItem;
+        if (shovel && shovel.name.includes('shovel')) {
+            return;
+        }
+        const shovelInInventory = this.bot.inventory.items().find(item => item.name.includes('shovel'));
+        if (shovelInInventory) {
+            this.bot.equip(shovelInInventory, 'hand');
+        }else {
+            this.bot.chat("I don't have a shovel!, it will be nice to have one!, For now I'll just use my hands!");
+        }
+    }
+
 
     /**
      * Give wood items to a player

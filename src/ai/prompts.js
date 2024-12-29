@@ -51,14 +51,10 @@ class Prompts {
     static getRandomResponse(responses, type, params = {}) {
         const templates = responses?.[type];
         if (!templates) return '';
-        
         let response = templates[Math.floor(Math.random() * templates.length)];
-        
-        // Replace template variables with actual values
         Object.entries(params).forEach(([key, value]) => {
             response = response.replace(`{${key}}`, value);
         });
-        
         return response;
     }
 }

@@ -4,7 +4,8 @@ const path = require('path');
 const Prompts = require('./prompts');
 const ResponseParser = require('./responseParser');
 const { EventEmitter } = require('events');
-
+const { EVENTS } = require('../config/constants');
+const { DEFAULT_SETTINGS } = require('../config/constants');
 /**
  * AI handler for TreeBot using Groq's AI
  */
@@ -18,7 +19,7 @@ class BotAI extends EventEmitter {
         this.client = new Groq({
             apiKey: apiKey || process.env.GROQ_API_KEY
         });
-        this.model = "llama-3.3-70b-versatile";
+        this.model = DEFAULT_SETTINGS.MODEL;
         this.config = JSON.parse(fs.readFileSync(path.join(__dirname, '../config/bot-config.json'), 'utf8'));
         this.functionDefs = this.createFunctionDefinitions();
     }
@@ -43,7 +44,7 @@ class BotAI extends EventEmitter {
      */
     async processMessage(message, context = {}) {
         try {
-            this.emit('aiProcessingStart', { message, context });
+            this.emit(EVENTS.AI_PROCESSING_START, { message, context });
             const prompt = Prompts.createFunctionCallPrompt(
                 this.config,
                 this.functionDefs,
@@ -64,9 +65,9 @@ class BotAI extends EventEmitter {
                         const responseParams = {
                             ...ResponseParser.extractResponseParams(functionCall),
                             playerName: context.playerName
-                        };              
-                        this.emit('aiProcessingComplete', { 
-                            message, 
+                        };
+                        this.emit(EVENTS.AI_PROCESSING_COMPLETE, {
+                            message,
                             response: {
                                 type: 'command',
                                 command: capability.command,
@@ -80,7 +81,7 @@ class BotAI extends EventEmitter {
                                     responseParams
                                 )
                             },
-                            success: true 
+                            success: true
                         });
                         return {
                             type: 'command',
@@ -99,9 +100,9 @@ class BotAI extends EventEmitter {
                 }
             } catch (e) {
                 console.error('Error parsing function call:', e);
-                this.emit('aiProcessingError', { 
-                    message, 
-                    error: e.message 
+                this.emit('aiProcessingError', {
+                    message,
+                    error: e.message
                 });
                 return {
                     type: 'error',
@@ -109,13 +110,13 @@ class BotAI extends EventEmitter {
                 };
             }
 
-            this.emit('aiProcessingComplete', { 
-                message, 
+            this.emit('aiProcessingComplete', {
+                message,
                 response: {
                     type: 'conversation',
                     response: response
                 },
-                success: true 
+                success: true
             });
             return {
                 type: 'conversation',
@@ -123,9 +124,9 @@ class BotAI extends EventEmitter {
             };
         } catch (error) {
             console.error('Error processing message with Groq AI:', error);
-            this.emit('aiProcessingError', { 
-                message, 
-                error: error.message 
+            this.emit('aiProcessingError', {
+                message,
+                error: error.message
             });
             return {
                 type: 'error',

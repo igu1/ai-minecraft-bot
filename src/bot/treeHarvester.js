@@ -2,6 +2,7 @@ const { goals } = require('mineflayer-pathfinder');
 const { GoalNear } = goals;
 const { EventEmitter } = require('events');
 const { TREE_BLOCKS, DEFAULT_SETTINGS, EVENTS } = require('../config/constants');
+const { getTool } = require('../utils/tools');
 
 /**
  * Tree harvesting functionality for TreeBot
@@ -16,14 +17,16 @@ class TreeHarvester extends EventEmitter {
         super();
         this.bot = bot;
         this.isHarvesting = false;
+        this.tool = null;
     }
 
     /**
      * Start harvesting trees
      * @param {Object} params - Harvesting parameters
+     * @param {Object} inventory - Inventory object
      * @returns {Promise<void>}
      */
-    async startHarvest(params = {}) {
+    async startHarvest(params = {}, inventory) {
         if (this.isHarvesting) {
             this.bot.chat("I'm already harvesting trees!");
             return;
@@ -44,13 +47,12 @@ class TreeHarvester extends EventEmitter {
                     this.bot.chat(`No more ${treeType} trees found nearby.`);
                     break;
                 }
-
-                // Emit tree found event
                 this.emit(EVENTS.TREE_FOUND, {
                     position: tree.position,
                     type: tree.name
                 });
-
+                
+                getTool(inventory, params.tool || 'axe');
                 const success = await this.harvestTree(tree);
                 if (success) {
                     harvestedCount++;
@@ -127,43 +129,77 @@ class TreeHarvester extends EventEmitter {
      */
     async harvestTree(treeBlock) {
         try {
-            await this.bot.pathfinder.goto(new GoalNear(
-                treeBlock.position.x, 
-                treeBlock.position.y, 
-                treeBlock.position.z, 
-                2
-            ));
+            // Set a timeout for pathfinding (10 seconds)
+            const pathfindingTimeout = setTimeout(() => {
+                this.bot.pathfinder.stop();
+                throw new Error('Pathfinding timeout: Could not reach tree');
+            }, 10000);
+
+            try {
+                await this.bot.pathfinder.goto(new GoalNear(
+                    treeBlock.position.x, 
+                    treeBlock.position.y, 
+                    treeBlock.position.z, 
+                    2
+                ));
+            } finally {
+                clearTimeout(pathfindingTimeout);
+            }
             
+            // Check if we actually reached close enough to the tree
+            const distanceToTree = this.bot.entity.position.distanceTo(treeBlock.position);
+            if (distanceToTree > 4) { // If we're too far, something went wrong
+                throw new Error(`Could not get close enough to tree. Distance: ${distanceToTree}`);
+            }
+
             let currentBlock = treeBlock;
             while (currentBlock && this.isTreeLog(currentBlock)) {
-                await this.bot.dig(currentBlock);
-                await new Promise(resolve => setTimeout(resolve, 500));
-            
-                const droppedLogs = Object.values(this.bot.entities).filter(entity => 
-                    entity.type === 'object' && 
-                    TREE_BLOCKS.some(treeName => entity.name.includes(treeName)) &&
-                    entity.position.distanceTo(this.bot.entity.position) < 5
-                );
+                if (!this.isHarvesting) break; // Check if harvesting was stopped
+                
+                try {
+                    await this.bot.dig(currentBlock);
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                
+                    const droppedLogs = Object.values(this.bot.entities).filter(entity => 
+                        entity.type === 'object' && 
+                        TREE_BLOCKS.some(treeName => entity.name.includes(treeName)) &&
+                        entity.position.distanceTo(this.bot.entity.position) < 5
+                    );
 
-                for (const log of droppedLogs) {
-                    try {
-                        await this.bot.pathfinder.goto(new GoalNear(
-                            log.position.x, 
-                            log.position.y, 
-                            log.position.z, 
-                            1
-                        ));
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                    } catch (err) {
-                        console.error('Error collecting log:', err);
+                    for (const log of droppedLogs) {
+                        if (!this.isHarvesting) break;
+                        
+                        const collectTimeout = setTimeout(() => {
+                            this.bot.pathfinder.stop();
+                            this.bot.chat("I couldn't reach the log.");
+                            throw new Error('Pathfinding timeout: Could not reach log');
+                        }, 5000);
+
+                        try {
+                            await this.bot.pathfinder.goto(new GoalNear(
+                                log.position.x, 
+                                log.position.y, 
+                                log.position.z, 
+                                1
+                            ));
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        } catch (err) {
+                            console.error('Error collecting log:', err);
+                        } finally {
+                            clearTimeout(collectTimeout);
+                        }
                     }
+                    currentBlock = this.bot.blockAt(currentBlock.position.offset(0, 1, 0));
+                } catch (err) {
+                    console.error('Error breaking tree block:', err);
+                    break; // Break the loop if we can't break a block
                 }
-                currentBlock = this.bot.blockAt(currentBlock.position.offset(0, 1, 0));
             }
             
             return true;
         } catch (err) {
             console.error('Error harvesting tree:', err);
+            this.bot.chat(`Failed to harvest tree: ${err.message}`);
             return false;
         }
     }
@@ -172,7 +208,7 @@ class TreeHarvester extends EventEmitter {
      * Stop harvesting
      */
     stop() {
-        if (this.isHarvesting) {
+        if (this.t) {
             this.isHarvesting = false;
             this.bot.chat("Stopping tree harvest.");
         }
